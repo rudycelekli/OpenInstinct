@@ -14,7 +14,7 @@ jobs:
       matrix:
         include:
           - label: composer-draft
-            source: 1032f6a5538dd24f08bd99037b9f9906f4c90b45
+            source: d8e12f11f134f5f037da6a265ce13729a7952631
     env:
       DATABASE_URL: postgresql://fixture:fixture@127.0.0.1:5432/openinstinct_fixture
       KERNEL_API_KEY: fixture-kernel-key
