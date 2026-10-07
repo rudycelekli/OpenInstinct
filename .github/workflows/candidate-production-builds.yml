@@ -1,0 +1,47 @@
+name: Candidate production builds
+on:
+  pull_request:
+    paths:
+      - .github/workflows/candidate-production-builds.yml
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Production build (${{ matrix.label }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: plaintext-delivery
+            source: 367ef598e5e1de557f68fdb285aa1f21b0bbf68a
+    env:
+      DATABASE_URL: postgresql://fixture:fixture@127.0.0.1:5432/openinstinct_fixture
+      KERNEL_API_KEY: fixture-kernel-key
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      BETTER_AUTH_SECRET: openinstinct-public-build-fixture-secret
+      SECRET_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ matrix.source }}
+      - name: Verify candidate identity
+        env:
+          EXPECTED_SOURCE: ${{ matrix.source }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE"
+          git show --no-patch --format='SOURCE %H TREE %T' HEAD
+          sha256sum pnpm-lock.yaml
+          git rev-parse HEAD:.github/workflows/checks.yml
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build exact candidate
+        run: pnpm build
